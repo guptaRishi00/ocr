@@ -59,7 +59,7 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 dark:bg-gray-950">
       <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl w-full max-w-2xl text-center">
         <h1 className="text-4xl font-extrabold mb-2 text-gray-800 dark:text-gray-50">
-          Gemini OCR App
+          Softexedge OCR App
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mb-8">
           Upload an image to extract text from it.
