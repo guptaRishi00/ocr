@@ -96,7 +96,7 @@ export default function Dashboard() {
               .map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg animate-pulse"
+                  className="bg-white  rounded-2xl p-6 shadow-lg animate-pulse"
                 >
                   <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-4"></div>
                   <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
@@ -141,7 +141,7 @@ export default function Dashboard() {
               ].map((stat, index) => (
                 <div
                   key={index}
-                  className={`${stat.bgColor} rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow`}
+                  className={`${stat.bgColor} rounded-2xl p-6 border border-gray-200  hover:shadow-lg transition-shadow`}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div
@@ -150,10 +150,10 @@ export default function Dashboard() {
                       <stat.icon className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                  <div className="text-2xl font-bold text-gray-900  mb-1">
                     {stat.value}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-gray-600 ">
                     {stat.title}
                   </div>
                 </div>
@@ -162,9 +162,9 @@ export default function Dashboard() {
       </div>
 
       {/* Search and Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+      <div className="bg-white  rounded-2xl p-6 shadow-lg">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-gray-900 ">
             Extraction History ({total})
           </h2>
 
@@ -177,7 +177,7 @@ export default function Dashboard() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search in extracted text..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                  className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500  "
                 />
               </div>
               <button
@@ -210,7 +210,7 @@ export default function Dashboard() {
         {loading && (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            <span className="ml-3 text-gray-600 dark:text-gray-400">
+            <span className="ml-3 text-gray-600 ">
               Loading responses...
             </span>
           </div>
@@ -235,10 +235,10 @@ export default function Dashboard() {
         {!loading && !error && responses.length === 0 && (
           <div className="text-center py-12">
             <DocumentTextIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-medium text-gray-900  mb-2">
               {searchTerm ? "No responses found" : "No extractions yet"}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 ">
               {searchTerm
                 ? "Try adjusting your search terms."
                 : "Upload an image to get started with text extraction."}
@@ -252,20 +252,20 @@ export default function Dashboard() {
             {responses.map((response) => (
               <div
                 key={response.id}
-                className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-md transition-shadow bg-gray-50 dark:bg-gray-900/50"
+                className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-gray-50"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <h3 className="text-lg font-semibold text-gray-900 ">
                         {response.originalName || `Response #${response.id}`}
                       </h3>
-                      <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-sm rounded-full">
+                      <span className="px-3 py-1 bg-indigo-100  text-indigo-800  text-sm rounded-full">
                         #{response.id}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-6 text-sm text-gray-500 ">
                       <span className="flex items-center">
                         <CalendarDaysIcon className="w-4 h-4 mr-1" />
                         {response.formattedDate}
@@ -297,7 +297,7 @@ export default function Dashboard() {
                           selectedResponse === response.id ? null : response.id,
                         )
                       }
-                      className="flex items-center px-3 py-2 text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+                      className="flex items-center px-3 py-2 text-sm bg-indigo-100  text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
                     >
                       {selectedResponse === response.id ? (
                         <>
@@ -323,15 +323,15 @@ export default function Dashboard() {
                 </div>
 
                 {/* Text Preview */}
-                <div className="text-gray-700 dark:text-gray-300">
+                <div className="text-gray-700 ">
                   {selectedResponse === response.id ? (
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-600 max-h-96 overflow-auto">
+                    <div className="bg-white  p-4 rounded-xl border border-gray-200 dark:border-gray-600 max-h-96 overflow-auto">
                       <div className="prose dark:prose-invert max-w-none">
                         <ReactMarkdown>{response.extractedText}</ReactMarkdown>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
+                    <p className="text-sm text-gray-600  line-clamp-3">
                       {response.textPreview}
                     </p>
                   )}
@@ -347,7 +347,7 @@ export default function Dashboard() {
             <button
               disabled={currentPage === 1}
               onClick={() => handlePageChange(currentPage - 1)}
-              className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="px-4 py-2 text-sm bg-gray-200  text-gray-700  rounded-lg disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               Previous
             </button>
@@ -362,7 +362,7 @@ export default function Dashboard() {
                     className={`px-3 py-2 text-sm rounded-lg transition-colors ${
                       currentPage === pageNum
                         ? "bg-indigo-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                        : "bg-gray-200  text-gray-700  hover:bg-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
                     {pageNum}
@@ -377,7 +377,7 @@ export default function Dashboard() {
                     className={`px-3 py-2 text-sm rounded-lg transition-colors ${
                       currentPage === pages
                         ? "bg-indigo-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                        : "bg-gray-200  text-gray-700  hover:bg-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
                     {pages}
@@ -389,7 +389,7 @@ export default function Dashboard() {
             <button
               disabled={currentPage === pages}
               onClick={() => handlePageChange(currentPage + 1)}
-              className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="px-4 py-2 text-sm bg-gray-200  text-gray-700  rounded-lg disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               Next
             </button>

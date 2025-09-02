@@ -1,5 +1,5 @@
 import { prisma } from "./database";
-import { OcrResponse } from "../generated/prisma";
+import { OcrResponse } from "@prisma/client";
 
 export interface CreateOcrResponseData {
   extractedText: string;
