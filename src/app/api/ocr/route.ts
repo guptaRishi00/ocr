@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import { OcrService } from "../../../lib/ocrService";
+import { getAuthSession } from "../../../lib/auth";
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
@@ -18,7 +20,13 @@ export const config = {
 };
 
 export async function POST(req: Request) {
+  const startTime = Date.now();
+
   try {
+    // Check authentication - allow demo mode for unsigned users
+    const session = await getAuthSession();
+    const isDemo = !session?.user?.id;
+
     const headers = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
@@ -35,13 +43,15 @@ export async function POST(req: Request) {
     if (!imageFile || typeof imageFile === "string") {
       return NextResponse.json(
         { error: "No image file uploaded." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const imageBuffer = await imageFile.arrayBuffer();
     const base64ImageData = Buffer.from(imageBuffer).toString("base64");
     const mimeType = imageFile.type;
+    const imageSize = imageBuffer.byteLength;
+    const originalName = imageFile.name;
 
     const prompt =
       "Extract all text from the following image. Format the output as a single block of plain text, preserving line breaks.";
@@ -59,12 +69,37 @@ export async function POST(req: Request) {
     const response = await result.response;
     const extractedText = response.text();
 
-    return NextResponse.json({ extractedText }, { status: 200 });
+    const processingTime = Date.now() - startTime;
+
+    let responseId = null;
+
+    // Save to database only if user is authenticated
+    if (!isDemo && session?.user?.id) {
+      const savedResponse = await OcrService.createOcrResponse({
+        extractedText,
+        userId: session.user.id,
+        originalName,
+        imageSize,
+        mimeType,
+        processingTime,
+      });
+      responseId = savedResponse.id;
+    }
+
+    return NextResponse.json(
+      {
+        extractedText,
+        responseId: isDemo ? -1 : responseId, // Use -1 for demo mode
+        processingTime,
+        isDemo,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Error in API route:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
