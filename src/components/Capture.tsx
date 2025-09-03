@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   CameraIcon,
   DocumentIcon,
@@ -14,6 +14,7 @@ import { useOcrMutation } from "../hooks/useOcrMutation";
 
 export default function Capture() {
   const [showCamera, setShowCamera] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [processingResult, setProcessingResult] = useState<{
     success: boolean;
     message: string;
@@ -21,12 +22,22 @@ export default function Capture() {
   } | null>(null);
 
   const { processOcr, loading } = useOcrMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageCapture = async (imageFile: File) => {
+    await processImageFile(imageFile);
+    
+    // Close camera after successful processing
+    setTimeout(() => {
+      setShowCamera(false);
+    }, 2000);
+  };
+
+  const processImageFile = async (imageFile: File) => {
     try {
       setProcessingResult(null);
       
-      // Process the captured image with OCR
+      // Process the image with OCR
       const result = await processOcr(imageFile);
       
       if (result) {
@@ -38,11 +49,6 @@ export default function Capture() {
             responseId: result.responseId,
           },
         });
-        
-        // Close camera after successful processing
-        setTimeout(() => {
-          setShowCamera(false);
-        }, 2000);
       } else {
         setProcessingResult({
           success: false,
@@ -56,6 +62,18 @@ export default function Capture() {
         message: "An error occurred while processing the image",
       });
     }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      processImageFile(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   const handleCloseCamera = () => {
@@ -108,6 +126,15 @@ export default function Capture() {
         </div>
       )}
 
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        onChange={handleFileSelect}
+        accept="image/*"
+        className="hidden"
+      />
+
       {/* Capture Options */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         {/* Camera Capture */}
@@ -124,14 +151,19 @@ export default function Capture() {
             </p>
             <button
               onClick={() => setShowCamera(true)}
-              className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              disabled={loading}
+              className={`w-full px-6 py-3 rounded-lg transition-colors font-medium ${
+                loading
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-purple-600 text-white hover:bg-purple-700"
+              }`}
             >
-              Start Camera
+              {loading ? "Processing..." : "Start Camera"}
             </button>
           </div>
         </div>
 
-        {/* File Upload (existing feature) */}
+        {/* File Upload */}
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow">
           <div className="text-center">
             <div className="inline-flex p-3 bg-blue-100 rounded-full mb-4">
@@ -144,11 +176,23 @@ export default function Capture() {
               Upload an existing image file of a business card from your device.
             </p>
             <button
-              onClick={() => {/* Navigate to upload section */}}
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              onClick={triggerFileInput}
+              disabled={loading}
+              className={`w-full px-6 py-3 rounded-lg transition-colors font-medium ${
+                loading
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
             >
-              Choose File
+              {loading ? "Processing..." : "Choose File"}
             </button>
+            
+            {/* Show selected file name if any */}
+            {selectedFile && (
+              <p className="text-sm text-gray-500 mt-2 truncate">
+                Selected: {selectedFile.name}
+              </p>
+            )}
           </div>
         </div>
       </div>
