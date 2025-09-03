@@ -2,399 +2,296 @@
 
 import { useState } from "react";
 import {
-  ChartBarIcon,
-  DocumentTextIcon,
-  ClockIcon,
-  PhotoIcon,
+  HomeIcon,
+  UsersIcon,
+  CameraIcon,
+  EnvelopeIcon,
+  Cog6ToothIcon,
   MagnifyingGlassIcon,
-  TrashIcon,
   EyeIcon,
-  EyeSlashIcon,
-  CalendarDaysIcon,
+  ChartBarIcon,
+  PlusIcon,
   ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
-import ReactMarkdown from "react-markdown";
-import { useOcrResponses } from "../hooks/useOcrResponses";
-import { useOcrStats } from "../hooks/useOcrStats";
-import { useOcrMutation } from "../hooks/useOcrMutation";
+import { useSession } from "next-auth/react";
+import { useExtractedCards } from "../hooks/useExtractedCards";
+import { useDashboardMetrics } from "../hooks/useDashboardMetrics";
+import Capture from "./Capture";
+import ContactManagement from "./ContactManagement";
 
 export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedResponse, setSelectedResponse] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const { data: session } = useSession();
 
-  const {
-    responses,
-    loading,
-    error,
-    total,
-    pages,
-    refetch,
-    searchResponses,
-    clearSearch,
-  } = useOcrResponses(currentPage);
+  // Fetch real data from API
+  const { metrics, loading: metricsLoading, error: metricsError } = useDashboardMetrics();
+  const { 
+    cards: recentCards, 
+    loading: cardsLoading, 
+    error: cardsError 
+  } = useExtractedCards({ limit: 3 }); // Get only 3 recent extracted cards for dashboard
 
-  const { stats, loading: statsLoading } = useOcrStats();
-  const { deleteResponse, loading: deleteLoading } = useOcrMutation();
+  const sidebarItems = [
+    { id: "dashboard", label: "Dashboard", icon: HomeIcon },
+    { id: "contacts", label: "Contacts", icon: UsersIcon },
+    { id: "capture", label: "Capture", icon: CameraIcon },
+    { id: "campaigns", label: "Campaigns", icon: EnvelopeIcon },
+    { id: "settings", label: "Settings", icon: Cog6ToothIcon },
+  ];
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      await searchResponses(searchTerm.trim());
-      setCurrentPage(1);
-    } else {
-      await clearSearch();
+  // Map metrics to include icons
+  const metricsWithIcons = metrics.map((metric, index) => ({
+    ...metric,
+    icon: [UsersIcon, CameraIcon, EnvelopeIcon, ArrowTrendingUpIcon][index] || UsersIcon,
+  }));
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "new":
+        return "bg-green-100 text-green-800";
+      case "active":
+        return "bg-blue-100 text-blue-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this OCR response?")) {
-      const success = await deleteResponse(id);
-      if (success) {
-        await refetch();
-      }
-    }
-  };
-
-  const handleClearSearch = async () => {
-    setSearchTerm("");
-    await clearSearch();
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Dashboard Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-8 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">OCR Dashboard</h1>
-            <p className="text-indigo-100">
-              Manage and analyze your text extraction history
-            </p>
-          </div>
-          <ChartBarIcon className="w-12 h-12 text-indigo-200" />
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-lg">
+        <div className="p-6">
+          <h1 className="text-xl font-bold text-purple-600">BusinessConnect</h1>
         </div>
+        
+        <nav className="px-4 space-y-2">
+          {sidebarItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
+                activeTab === item.id
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <item.icon className="w-5 h-5 mr-3" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {statsLoading
-          ? Array(4)
-              .fill(0)
-              .map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-white  rounded-2xl p-6 shadow-lg animate-pulse"
-                >
-                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-4"></div>
-                  <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
-                </div>
-              ))
-          : stats
-            ? [
-                {
-                  title: "Total Extractions",
-                  value: stats.totalResponses.toLocaleString(),
-                  icon: DocumentTextIcon,
-                  color: "from-blue-500 to-cyan-500",
-                  bgColor: "bg-blue-50 dark:bg-blue-900/20",
-                },
-                {
-                  title: "Characters Extracted",
-                  value: stats.totalTextLength.toLocaleString(),
-                  icon: ArrowTrendingUpIcon,
-                  color: "from-green-500 to-emerald-500",
-                  bgColor: "bg-green-50 dark:bg-green-900/20",
-                },
-                {
-                  title: "Avg Processing Time",
-                  value: stats.averageProcessingTime
-                    ? `${Math.round(stats.averageProcessingTime)}ms`
-                    : "N/A",
-                  icon: ClockIcon,
-                  color: "from-purple-500 to-pink-500",
-                  bgColor: "bg-purple-50 dark:bg-purple-900/20",
-                },
-                {
-                  title: "Most Common Format",
-                  value: stats.mostCommonMimeType
-                    ? stats.mostCommonMimeType
-                        .replace("image/", "")
-                        .toUpperCase()
-                    : "N/A",
-                  icon: PhotoIcon,
-                  color: "from-orange-500 to-red-500",
-                  bgColor: "bg-orange-50 dark:bg-orange-900/20",
-                },
-              ].map((stat, index) => (
-                <div
-                  key={index}
-                  className={`${stat.bgColor} rounded-2xl p-6 border border-gray-200  hover:shadow-lg transition-shadow`}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}
-                    >
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900  mb-1">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-gray-600 ">
-                    {stat.title}
-                  </div>
-                </div>
-              ))
-            : null}
-      </div>
-
-      {/* Search and Controls */}
-      <div className="bg-white  rounded-2xl p-6 shadow-lg">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 ">
-            Extraction History ({total})
-          </h2>
-
-          <div className="flex gap-3">
-            <form onSubmit={handleSearch} className="flex gap-2">
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-purple-600">Welcome back!</h2>
+              <p className="text-gray-600">Manage your business connections efficiently</p>
+            </div>
+            <div className="flex items-center space-x-4">
               <div className="relative">
                 <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search in extracted text..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500  "
+                  placeholder="Search contacts..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors"
-              >
-                Search
+              <button className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Add Contact
               </button>
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-            </form>
-
-            <button
-              onClick={refetch}
-              className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
-            >
-              Refresh
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            <span className="ml-3 text-gray-600 ">
-              Loading responses...
-            </span>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-            <p className="text-red-800 dark:text-red-200 font-medium">
-              Error: {error}
-            </p>
-            <button
-              onClick={refetch}
-              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && responses.length === 0 && (
-          <div className="text-center py-12">
-            <DocumentTextIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900  mb-2">
-              {searchTerm ? "No responses found" : "No extractions yet"}
-            </h3>
-            <p className="text-gray-600 ">
-              {searchTerm
-                ? "Try adjusting your search terms."
-                : "Upload an image to get started with text extraction."}
-            </p>
-          </div>
-        )}
-
-        {/* Responses List */}
-        {!loading && !error && responses.length > 0 && (
-          <div className="space-y-4">
-            {responses.map((response) => (
-              <div
-                key={response.id}
-                className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-gray-50"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 ">
-                        {response.originalName || `Response #${response.id}`}
-                      </h3>
-                      <span className="px-3 py-1 bg-indigo-100  text-indigo-800  text-sm rounded-full">
-                        #{response.id}
-                      </span>
+        <div className="flex-1 overflow-auto p-6">
+          {/* Show different components based on active tab */}
+          {activeTab === "capture" ? (
+            <Capture />
+          ) : activeTab === "contacts" ? (
+            <ContactManagement onBack={() => setActiveTab("dashboard")} />
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+              {/* Left Content - Metrics & Contacts */}
+              <div className="xl:col-span-3 space-y-6">
+              {/* Metrics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {metricsLoading ? (
+                  Array(4).fill(0).map((_, index) => (
+                    <div key={index} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                      </div>
+                      <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
                     </div>
-
-                    <div className="flex items-center gap-6 text-sm text-gray-500 ">
-                      <span className="flex items-center">
-                        <CalendarDaysIcon className="w-4 h-4 mr-1" />
-                        {response.formattedDate}
-                      </span>
-                      {response.mimeType && (
-                        <span className="flex items-center">
-                          <PhotoIcon className="w-4 h-4 mr-1" />
-                          {response.mimeType
-                            .replace("image/", "")
-                            .toUpperCase()}
-                        </span>
-                      )}
-                      {response.imageSize && (
-                        <span>{formatFileSize(response.imageSize)}</span>
-                      )}
-                      {response.processingTime && (
-                        <span className="flex items-center">
-                          <ClockIcon className="w-4 h-4 mr-1" />
-                          {response.processingTime}ms
-                        </span>
-                      )}
-                    </div>
+                  ))
+                ) : metricsError ? (
+                  <div className="col-span-full bg-red-50 border border-red-200 rounded-xl p-6">
+                    <p className="text-red-800">Error loading metrics: {metricsError}</p>
                   </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        setSelectedResponse(
-                          selectedResponse === response.id ? null : response.id,
-                        )
-                      }
-                      className="flex items-center px-3 py-2 text-sm bg-indigo-100  text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
-                    >
-                      {selectedResponse === response.id ? (
-                        <>
-                          <EyeSlashIcon className="w-4 h-4 mr-1" />
-                          Hide
-                        </>
-                      ) : (
-                        <>
-                          <EyeIcon className="w-4 h-4 mr-1" />
-                          View
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(response.id)}
-                      disabled={deleteLoading}
-                      className="flex items-center px-3 py-2 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors disabled:opacity-50"
-                    >
-                      <TrashIcon className="w-4 h-4 mr-1" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                {/* Text Preview */}
-                <div className="text-gray-700 ">
-                  {selectedResponse === response.id ? (
-                    <div className="bg-white  p-4 rounded-xl border border-gray-200 dark:border-gray-600 max-h-96 overflow-auto">
-                      <div className="prose dark:prose-invert max-w-none">
-                        <ReactMarkdown>{response.extractedText}</ReactMarkdown>
+                ) : (
+                  metricsWithIcons.map((metric, index) => (
+                    <div key={index} className="bg-white rounded-xl p-6 shadow-sm">
+                      <div className="flex items-center justify-between mb-4">
+                        <metric.icon className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {metric.value}
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">{metric.title}</div>
+                      <div className={`text-xs font-medium ${
+                        metric.changeType === "positive" ? "text-green-600" : "text-red-600"
+                      }`}>
+                        {metric.change}
                       </div>
                     </div>
+                  ))
+                )}
+              </div>
+
+              {/* Recent Cards */}
+              <div className="bg-white rounded-xl shadow-sm">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">Recent Cards</h3>
+                    <button className="text-purple-600 hover:text-purple-700 font-medium">
+                      View All
+                    </button>
+                  </div>
+                  <p className="text-gray-600 text-sm mt-1">Your latest extracted business cards</p>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  {cardsLoading ? (
+                    <div className="p-6">
+                      <div className="animate-pulse space-y-4">
+                        {Array(3).fill(0).map((_, index) => (
+                          <div key={index} className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                            <div className="flex-1 space-y-2">
+                              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                              <div className="h-3 bg-gray-200 rounded w-1/6"></div>
+                            </div>
+                            <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+                            <div className="h-4 bg-gray-200 rounded w-1/8"></div>
+                            <div className="h-4 bg-gray-200 rounded w-1/12"></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : cardsError ? (
+                    <div className="p-6 bg-red-50 border border-red-200 rounded-xl m-6">
+                      <p className="text-red-800">Error loading cards: {cardsError}</p>
+                    </div>
+                  ) : recentCards.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">
+                      <CameraIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No cards scanned yet</h3>
+                      <p>Start by uploading and scanning some business cards.</p>
+                    </div>
                   ) : (
-                    <p className="text-sm text-gray-600  line-clamp-3">
-                      {response.textPreview}
-                    </p>
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Company
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Extracted
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {recentCards.map((card) => (
+                          <tr key={card.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-3">
+                                  {card.avatar}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {card.name}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {card.title || "No title"}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {card.company || "No company"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {card.email || "No email"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {card.lastContact}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <button 
+                                className="text-gray-400 hover:text-gray-600"
+                                title="View extracted text"
+                              >
+                                <EyeIcon className="w-5 h-5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {pages > 1 && (
-          <div className="flex justify-center items-center space-x-2 mt-8">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-              className="px-4 py-2 text-sm bg-gray-200  text-gray-700  rounded-lg disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              Previous
-            </button>
-
-            <div className="flex space-x-1">
-              {Array.from({ length: Math.min(5, pages) }, (_, i) => {
-                const pageNum = i + 1;
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`px-3 py-2 text-sm rounded-lg transition-colors ${
-                      currentPage === pageNum
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-200  text-gray-700  hover:bg-gray-300 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-              {pages > 5 && (
-                <>
-                  <span className="px-2 py-2 text-gray-500">...</span>
-                  <button
-                    onClick={() => handlePageChange(pages)}
-                    className={`px-3 py-2 text-sm rounded-lg transition-colors ${
-                      currentPage === pages
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-200  text-gray-700  hover:bg-gray-300 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    {pages}
-                  </button>
-                </>
-              )}
             </div>
 
-            <button
-              disabled={currentPage === pages}
-              onClick={() => handlePageChange(currentPage + 1)}
-              className="px-4 py-2 text-sm bg-gray-200  text-gray-700  rounded-lg disabled:opacity-50 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              Next
-            </button>
+            {/* Right Content - Analytics */}
+            <div className="xl:col-span-1">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">📈 Analytics</h3>
+                </div>
+                <p className="text-gray-600 text-sm mb-6">Contact growth overview</p>
+                
+                {/* Mock Chart Area */}
+                <div className="space-y-6">
+                  <div className="h-48 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <ChartBarIcon className="w-12 h-12 text-purple-600 mx-auto mb-2" />
+                      <p className="text-purple-600 font-medium">Charts & Analytics</p>
+                      <p className="text-gray-500 text-sm">Coming Soon</p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-green-600 mb-1">This Month</div>
+                    <div className="text-2xl font-bold text-green-600">+24.5%</div>
+                    <div className="text-gray-500 text-sm">Growth Rate</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

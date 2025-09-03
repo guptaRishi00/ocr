@@ -54,6 +54,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   ocrResponses  OcrResponse[]
+  contacts      Contact[]
+  emailCampaigns EmailCampaign[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -91,6 +93,71 @@ model OcrResponse {
   updatedAt      DateTime @updatedAt
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts Contact[] // One OCR response can create multiple contacts
 
   @@map("ocr_responses")
+}
+
+// Business Contact model for storing extracted business card data
+model Contact {
+  id          Int      @id @default(autoincrement())
+  userId      String   // Foreign key to User
+  name        String
+  title       String?
+  company     String?
+  email       String?
+  phone       String?
+  address     String?
+  website     String?
+  notes       String?  @db.Text
+  status      String   @default("new") // new, active, pending, archived
+  tags        String[] // Array of tags for categorization
+  lastContact DateTime?
+  ocrResponseId Int?   // Link to the OCR response that created this contact
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ocrResponse OcrResponse? @relation(fields: [ocrResponseId], references: [id])
+  emailLogs EmailLog[]
+
+  @@map("contacts")
+}
+
+// Email Campaign model
+model EmailCampaign {
+  id          Int      @id @default(autoincrement())
+  userId      String   // Foreign key to User
+  name        String
+  subject     String
+  content     String   @db.Text
+  status      String   @default("draft") // draft, sent, scheduled
+  sentCount   Int      @default(0)
+  openCount   Int      @default(0)
+  clickCount  Int      @default(0)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailLogs EmailLog[]
+
+  @@map("email_campaigns")
+}
+
+// Email Log model to track individual email sends
+model EmailLog {
+  id          Int      @id @default(autoincrement())
+  campaignId  Int
+  contactId   Int
+  status      String   // sent, delivered, opened, clicked, bounced
+  sentAt      DateTime @default(now())
+  openedAt    DateTime?
+  clickedAt   DateTime?
+
+  campaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact  Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("email_logs")
 }
