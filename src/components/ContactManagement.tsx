@@ -126,7 +126,7 @@ export default function ContactManagement({ onBack }: ContactManagementProps) {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-gray-50">
+    <div className="p-6 bg-gray-50">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">

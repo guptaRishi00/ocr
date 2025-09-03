@@ -8,7 +8,6 @@ import {
   EnvelopeIcon,
   Cog6ToothIcon,
   MagnifyingGlassIcon,
-  EyeIcon,
   ChartBarIcon,
   PlusIcon,
   ArrowTrendingUpIcon,
@@ -18,10 +17,13 @@ import { useExtractedCards } from "../hooks/useExtractedCards";
 import { useDashboardMetrics } from "../hooks/useDashboardMetrics";
 import Capture from "./Capture";
 import ContactManagement from "./ContactManagement";
+import ContactDetailModal from "./ContactDetailModal";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: session } = useSession();
 
   // Fetch real data from API
@@ -30,7 +32,7 @@ export default function Dashboard() {
     cards: recentCards, 
     loading: cardsLoading, 
     error: cardsError 
-  } = useExtractedCards({ limit: 3 }); // Get only 3 recent extracted cards for dashboard
+  } = useExtractedCards({ limit: 20 }); // Get recent extracted cards for dashboard
 
   const sidebarItems = [
     { id: "dashboard", label: "Dashboard", icon: HomeIcon },
@@ -57,6 +59,16 @@ export default function Dashboard() {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const handleCardClick = (card: any) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
   };
 
   return (
@@ -86,7 +98,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="bg-white shadow-sm border-b p-6">
           <div className="flex items-center justify-between">
@@ -111,7 +123,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="p-6">
           {/* Show different components based on active tab */}
           {activeTab === "capture" ? (
             <Capture />
@@ -215,13 +227,17 @@ export default function Dashboard() {
                             Extracted
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
+                            Info
                           </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {recentCards.map((card) => (
-                          <tr key={card.id} className="hover:bg-gray-50">
+                          <tr 
+                            key={card.id} 
+                            className="hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => handleCardClick(card)}
+                          >
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-3">
@@ -247,12 +263,7 @@ export default function Dashboard() {
                               {card.lastContact}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <button 
-                                className="text-gray-400 hover:text-gray-600"
-                                title="View extracted text"
-                              >
-                                <EyeIcon className="w-5 h-5" />
-                              </button>
+                              <span className="text-gray-400 text-xs">Click to view</span>
                             </td>
                           </tr>
                         ))}
@@ -293,6 +304,13 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Contact Detail Modal */}
+      <ContactDetailModal
+        card={selectedCard}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }

@@ -80,15 +80,13 @@ export default function Home() {
       )}
 
       {currentView === "dashboard" && (
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-50">
           <Navigation 
             currentView={currentView} 
             onNavigate={setCurrentView} 
             onTryDemo={handleTryDemo} 
           />
-          <div className="py-8">
-            <Dashboard />
-          </div>
+          <Dashboard />
         </div>
       )}
     </>

@@ -82,7 +82,7 @@ export default function Capture() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto min-h-full">
       {/* Header */}
       <div className="text-center mb-8">
         <div className="inline-flex p-4 bg-purple-100 rounded-full mb-4">
