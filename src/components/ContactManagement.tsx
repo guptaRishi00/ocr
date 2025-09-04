@@ -13,6 +13,7 @@ import {
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import { useExtractedCards } from "../hooks/useExtractedCards";
+import ContactDetailModal from "./ContactDetailModal";
 
 interface ContactManagementProps {
   onBack?: () => void;
@@ -22,6 +23,8 @@ export default function ContactManagement({ onBack }: ContactManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { cards, loading, error, pagination } = useExtractedCards({ 
     limit: 20 
@@ -73,10 +76,14 @@ export default function ContactManagement({ onBack }: ContactManagementProps) {
     return "";
   };
 
-  const handleEmailClick = (email: string) => {
-    if (email) {
-      window.open(`mailto:${email}`, '_blank');
-    }
+  const handleEmailClick = (card: any) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCard(null);
   };
 
   const handlePhoneClick = (phone: string) => {
@@ -287,7 +294,7 @@ export default function ContactManagement({ onBack }: ContactManagementProps) {
                 <div className="border-t border-gray-100 px-6 py-4">
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleEmailClick(card.email)}
+                      onClick={() => handleEmailClick(card)}
                       disabled={!card.email}
                       className={`flex-1 flex items-center justify-center px-3 py-2 text-sm rounded-lg transition-colors ${
                         card.email
@@ -318,6 +325,13 @@ export default function ContactManagement({ onBack }: ContactManagementProps) {
           })}
         </div>
       )}
+
+      {/* Contact Detail Modal */}
+      <ContactDetailModal
+        card={selectedCard}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }

@@ -5,8 +5,6 @@ import {
   HomeIcon,
   UsersIcon,
   CameraIcon,
-  EnvelopeIcon,
-  Cog6ToothIcon,
   MagnifyingGlassIcon,
   ChartBarIcon,
   PlusIcon,
@@ -38,14 +36,12 @@ export default function Dashboard() {
     { id: "dashboard", label: "Dashboard", icon: HomeIcon },
     { id: "contacts", label: "Contacts", icon: UsersIcon },
     { id: "capture", label: "Capture", icon: CameraIcon },
-    { id: "campaigns", label: "Campaigns", icon: EnvelopeIcon },
-    { id: "settings", label: "Settings", icon: Cog6ToothIcon },
   ];
 
   // Map metrics to include icons
   const metricsWithIcons = metrics.map((metric, index) => ({
     ...metric,
-    icon: [UsersIcon, CameraIcon, EnvelopeIcon, ArrowTrendingUpIcon][index] || UsersIcon,
+    icon: [UsersIcon, CameraIcon, ArrowTrendingUpIcon][index] || UsersIcon,
   }));
 
   const getStatusColor = (status: string) => {

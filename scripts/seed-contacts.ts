@@ -115,20 +115,6 @@ async function seedContacts() {
       });
     }
 
-    // Create a sample email campaign
-    await prisma.emailCampaign.create({
-      data: {
-        userId: user.id,
-        name: 'Welcome Campaign',
-        subject: 'Great meeting you!',
-        content: 'Thank you for the productive meeting. Looking forward to our collaboration.',
-        status: 'sent',
-        sentCount: 15,
-        openCount: 12,
-        clickCount: 3,
-        sentAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
-      },
-    });
 
     console.log('Sample data created successfully!');
   } catch (error) {

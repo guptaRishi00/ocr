@@ -55,7 +55,6 @@ model User {
   sessions      Session[]
   ocrResponses  OcrResponse[]
   contacts      Contact[]
-  emailCampaigns EmailCampaign[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -119,45 +118,7 @@ model Contact {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   ocrResponse OcrResponse? @relation(fields: [ocrResponseId], references: [id])
-  emailLogs EmailLog[]
 
   @@map("contacts")
 }
 
-// Email Campaign model
-model EmailCampaign {
-  id          Int      @id @default(autoincrement())
-  userId      String   // Foreign key to User
-  name        String
-  subject     String
-  content     String   @db.Text
-  status      String   @default("draft") // draft, sent, scheduled
-  sentCount   Int      @default(0)
-  openCount   Int      @default(0)
-  clickCount  Int      @default(0)
-  scheduledAt DateTime?
-  sentAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  emailLogs EmailLog[]
-
-  @@map("email_campaigns")
-}
-
-// Email Log model to track individual email sends
-model EmailLog {
-  id          Int      @id @default(autoincrement())
-  campaignId  Int
-  contactId   Int
-  status      String   // sent, delivered, opened, clicked, bounced
-  sentAt      DateTime @default(now())
-  openedAt    DateTime?
-  clickedAt   DateTime?
-
-  campaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  contact  Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-
-  @@map("email_logs")
-}

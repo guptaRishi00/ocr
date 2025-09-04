@@ -80,7 +80,7 @@ function SignInForm() {
             {isLogin ? "Sign in to OCR App" : "Create your account"}
           </h2>
           <p className="mt-2 text-gray-600">
-            {isLogin ? "Access your personal OCR history and settings" : "Start extracting text from images"}
+            {isLogin ? "Access your personal OCR history and contacts" : "Start extracting text from images"}
           </p>
         </div>
 

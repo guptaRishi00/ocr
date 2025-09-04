@@ -40,13 +40,6 @@ export default function Homepage({ onTryDemo, onGetStarted }: HomepageProps) {
       color: "from-purple-500 to-indigo-500",
     },
     {
-      icon: EnvelopeIcon,
-      title: "Email Campaigns",
-      description:
-        "Send personalized emails and track engagement with your contacts",
-      color: "from-purple-500 to-indigo-500",
-    },
-    {
       icon: BoltIcon,
       title: "Lightning Fast",
       description:
@@ -279,7 +272,7 @@ export default function Homepage({ onTryDemo, onGetStarted }: HomepageProps) {
                 name: "Emily Rodriguez",
                 title: "Business Development",
                 company: "StartupXYZ",
-                quote: "The email campaign feature helped me reconnect with my entire network. Highly recommended!",
+                quote: "The contact management feature helped me organize my entire network. Highly recommended!",
                 rating: 5,
               },
             ].map((testimonial, index) => (
@@ -332,7 +325,7 @@ export default function Homepage({ onTryDemo, onGetStarted }: HomepageProps) {
                 name: "Professional", 
                 price: "$19/mo",
                 description: "Ideal for active networkers",
-                features: ["Unlimited cards", "Advanced OCR", "Email campaigns", "Priority support"],
+                features: ["Unlimited cards", "Advanced OCR", "Contact management", "Priority support"],
                 popular: true,
               },
               {
